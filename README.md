@@ -17,9 +17,9 @@
 5. Iniciar la base de datos
 ```docker-compose up -d```
 
-6. Ejecutar el Seed 
+6. Iniciar ```yarn start:dev```
+
+7. Ejecutar el Seed 
 ```
 http://localhost:3000/api/seed
 ```
-
-7. Iniciar ```yarn start:dev```
