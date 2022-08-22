@@ -1,18 +1,22 @@
 import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 
-import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
 
   constructor( 
       @InjectRepository(User)
-      private readonly userRepository: Repository<User> ) {}
+      private readonly userRepository: Repository<User>,
+      private readonly jwtSrv: JwtService ) {}
 
   async create(createUserDto: CreateUserDto) {
     try {
@@ -27,9 +31,10 @@ export class AuthService {
 
       delete user.password;
 
-      return user;
-
-      // TODO: Return JWT
+      return {
+        ...user,
+        token: this.getJwtToken({id: user.id})
+      };
 
     } catch(error) {
       this.handleDBErrors(error);
@@ -42,7 +47,7 @@ export class AuthService {
 
       const {password, email} = loginUserDto;
 
-      const user = await this.userRepository.findOne({where: {email}, select: {email: true, password: true}});
+      const user = await this.userRepository.findOne({where: {email}, select: {email: true, password: true, id: true}});
 
       if (!user) {
         throw new UnauthorizedException('Credentials are not valid *');
@@ -52,12 +57,20 @@ export class AuthService {
         throw new UnauthorizedException('Credentials are not valid **');
       }
 
-      return user;
-      // TODO: Return JWT
+      return {
+        ...user,
+        token: this.getJwtToken({id: user.id})
+      };
+      
 
     } catch(error) {
       this.handleDBErrors(error);
     }
+  }
+
+  private getJwtToken(payload: JwtPayload) {
+    const token = this.jwtSrv.sign(payload);
+    return token;
   }
 
   private handleDBErrors(error: any): never {
