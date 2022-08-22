@@ -2,7 +2,7 @@ import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGenerated
 import { ProductImage } from "./product-image.entity";
 
 
-@Entity()
+@Entity({name: 'products'})
 export class Product {
 
     @PrimaryGeneratedColumn('uuid')
@@ -59,9 +59,9 @@ export class Product {
     @OneToMany(
         () => ProductImage,
         productImage => productImage.product,
-        {cascade :true}
+        { cascade :true, eager: true }
     )
-    images?: ProductImage;
+    images?: ProductImage[];
 
     @BeforeInsert()
     checkSlugInsert() {
