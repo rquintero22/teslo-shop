@@ -13,10 +13,10 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 @Injectable()
 export class AuthService {
 
-  constructor( 
-      @InjectRepository(User)
-      private readonly userRepository: Repository<User>,
-      private readonly jwtSrv: JwtService ) {}
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly jwtSrv: JwtService) { }
 
   async create(createUserDto: CreateUserDto) {
     try {
@@ -24,8 +24,8 @@ export class AuthService {
       const { password, ...userData } = createUserDto;
 
       const user = this.userRepository.create({
-        ...userData, 
-        password: bcrypt.hashSync(password, 10)  
+        ...userData,
+        password: bcrypt.hashSync(password, 10)
       });
       await this.userRepository.save(user);
 
@@ -33,21 +33,21 @@ export class AuthService {
 
       return {
         ...user,
-        token: this.getJwtToken({id: user.id})
+        token: this.getJwtToken({ id: user.id })
       };
 
-    } catch(error) {
+    } catch (error) {
       this.handleDBErrors(error);
     }
-    
+
   }
 
   async login(loginUserDto: LoginUserDto) {
-    try{
+    try {
 
-      const {password, email} = loginUserDto;
+      const { password, email } = loginUserDto;
 
-      const user = await this.userRepository.findOne({where: {email}, select: {email: true, password: true, id: true}});
+      const user = await this.userRepository.findOne({ where: { email }, select: { email: true, password: true, id: true } });
 
       if (!user) {
         throw new UnauthorizedException('Credentials are not valid *');
@@ -59,13 +59,20 @@ export class AuthService {
 
       return {
         ...user,
-        token: this.getJwtToken({id: user.id})
+        token: this.getJwtToken({ id: user.id })
       };
-      
 
-    } catch(error) {
+
+    } catch (error) {
       this.handleDBErrors(error);
     }
+  }
+
+  async checkAuthStatus(user: User) {
+    return {
+      ...user,
+      token: this.getJwtToken({ id: user.id })
+    };
   }
 
   private getJwtToken(payload: JwtPayload) {
@@ -82,5 +89,5 @@ export class AuthService {
     throw new InternalServerErrorException('Please check server logs');
   }
 
-  
+
 }
